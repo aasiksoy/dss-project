@@ -1,0 +1,81 @@
+flowchart LR
+
+    subgraph USERS["Users"]
+        Patient[Patient]
+        Doctor[Doctor]
+        Researcher[Researcher]
+    end
+    Admin[Hospital IT admin]
+
+
+    subgraph TB1["TB1: Sensor (trusted)"]
+        Sensor(Medical sensor)
+    end
+
+    subgraph PH["Patient's phone (NOT trusted)"]
+        Phone(Smartphone app)
+    end
+
+
+    subgraph TB2["TB2: Hospital"]
+        Receiver(Receiver)
+        Login(Login server)
+        Portal(Portal)
+        Logger(Logging service)
+
+        subgraph TB3["TB3: Storage (admins have access)"]
+            DB[(Medical database)]
+            Log[(Audit log)]
+        end
+
+        subgraph TB4["TB4: Key management (separate admins)"]
+            KMS[(Key management system)]
+        end
+    end
+
+
+    subgraph TB5["TB5: Third party"]
+        Witness[(Outside copy of log hashes)]
+    end
+
+ 
+    Sensor -->|"encrypted reading (Bluetooth)"| Phone
+    Phone -->|"encrypted reading (Internet)"| Receiver
+    Receiver <-->|"sensor key"| KMS
+    Receiver -->|"store encrypted reading"| DB
+    Receiver -->|"log event"| Logger
+
+
+    Patient <-->|"request / own data"| Portal
+    Doctor <-->|"request / own patients' data"| Portal
+    Researcher <-->|"request / anonymised data"| Portal
+    Patient <-->|"log in / token"| Login
+    Doctor <-->|"log in / token"| Login
+    Researcher <-->|"log in / token"| Login
+    Portal -->|"read encrypted records"| DB
+    Portal <-->|"one patient's key"| KMS
+    Portal -->|"log event"| Logger
+
+
+    Logger -->|"log entry (hash chain)"| Log
+    Logger -->|"latest hash"| Witness
+
+  
+    Admin -.->|"direct access"| DB
+    Admin -.->|"direct access"| Log
+
+  
+    classDef user fill:#d9f2d9,stroke:#2e7d32,stroke-width:1.5px,color:#1b4d1e
+    class Patient,Doctor,Researcher,Admin user
+
+    classDef process fill:#fde0dc,stroke:#c62828,stroke-width:1.5px,color:#7f1d1d
+    class Sensor,Phone,Receiver,Login,Portal,Logger process
+
+    classDef storage fill:#dbe9fb,stroke:#1565c0,stroke-width:1.5px,color:#0d3c78
+    class DB,Log,KMS,Witness storage
+
+    classDef users fill:none,stroke:#999999,stroke-width:0px
+    class USERS users
+
+    classDef boundary fill:none,stroke:#333333,stroke-width:2px,stroke-dasharray:6 4
+    class TB1,PH,TB2,TB3,TB4,TB5 boundary
