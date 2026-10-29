@@ -14,7 +14,7 @@ flowchart LR
         Sensor(Medical sensor)
     end
 
-    subgraph PH["Patient's phone (NOT trusted)"]
+    subgraph PH["Patient's phone (not trusted)"]
         Phone(Smartphone app)
     end
 
